@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle image upload
     $post_image = null;
     if (isset($_FILES['post_image']) && $_FILES['post_image']['error'] === UPLOAD_ERR_OK) {
-        $target_dir = "../assets/uploads/";
+        $target_dir = "../user-dashboard/assets/uploads/";
         $file_extension = strtolower(pathinfo($_FILES['post_image']['name'], PATHINFO_EXTENSION));
         $file_name = "post_" . $university_id . "_" . time() . "." . $file_extension;
         $target_file = $target_dir . $file_name;

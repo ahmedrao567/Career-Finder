@@ -171,7 +171,7 @@ $has_more = count($next_page_posts) > 0;
 
                             <?php if ($post['post_image']): ?>
                                 <div class="mt-4 rounded-lg overflow-hidden border border-gray-200">
-                                    <img src="assets/uploads/<?php echo $post['post_image']; ?>"
+                                    <img src="../user-dashboard/assets/uploads/<?php echo $post['post_image']; ?>"
                                          alt="Post image"
                                          class="w-full h-auto max-h-96 object-cover">
                                 </div>

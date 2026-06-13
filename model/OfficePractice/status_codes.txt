@@ -1,0 +1,7 @@
+status codes
+200 ok
+201 new user created or something created
+400 bad req client send wrong data
+401 unauthorized access
+403 forbidden means client is not allowed to access the site
+404 page not found 

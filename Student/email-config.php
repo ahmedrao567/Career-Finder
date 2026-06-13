@@ -3,7 +3,7 @@
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
 define('SMTP_USERNAME', 'muneeb.amed0@gmail.com');
-define('SMTP_PASSWORD', 'cbfgzztxvhdtinxr');
+define('SMTP_PASSWORD', 'ynxbtgkxneaxykyg');
 define('SMTP_FROM', 'muneeb.amed0@gmail.com');
 define('SMTP_FROM_NAME', 'CareerFinder');
 

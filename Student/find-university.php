@@ -711,11 +711,6 @@
             
             // Load universities data in background
             await fetchUniversitiesData();
-            
-            // Set sample data for demonstration
-            document.getElementById('matricMarks').value = '85.5';
-            document.getElementById('fscMarks').value = '78.2';
-            document.getElementById('preference').value = 'Engineering & Technology';
         });
     </script>
 </body>

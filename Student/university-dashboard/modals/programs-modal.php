@@ -3,13 +3,13 @@
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 modal-content">
         <div class="flex justify-between items-center p-6 border-b border-gray-200">
             <h3 class="text-2xl font-bold text-gray-900" id="programModalTitle">Add New Program</h3>
-            <button onclick="closeModal('programsModal')" class="text-gray-400 hover:text-gray-600 transition">
+            <button type="button" onclick="closeModal('programsModal')" class="text-gray-400 hover:text-gray-600 transition">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <form id="programForm" method="POST" class="p-6 space-y-6">
-            <input type="hidden" id="program_id" name="program_id">
+        <form id="programForm" class="p-6 space-y-6">
+            <input type="hidden" id="program_id" name="program_id" value="">
             
             <!-- Program Name -->
             <div>
@@ -29,7 +29,28 @@
                 <select id="program_category" name="program_category" required
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus transition">
                     <option value="">Select Category</option>
-                    <?php foreach (getProgramCategories() as $category): ?>
+                    <?php 
+                    // Get categories - make sure this function exists
+                    include '../config.php';
+                    function getProgramCategories() {
+                        return [
+                            'Engineering & Technology',
+                            'Computer Science & IT',
+                            'Business & Management',
+                            'Medical & Health Sciences',
+                            'Natural Sciences',
+                            'Social Sciences',
+                            'Arts & Humanities',
+                            'Law & Legal Studies',
+                            'Education',
+                            'Agriculture',
+                            'Architecture',
+                            'Pharmacy',
+                            'Other'
+                        ];
+                    }
+                    
+                    foreach (getProgramCategories() as $category): ?>
                         <option value="<?php echo htmlspecialchars($category); ?>">
                             <?php echo htmlspecialchars($category); ?>
                         </option>
@@ -59,7 +80,7 @@
                     class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
                     Cancel
                 </button>
-                <button type="submit"
+                <button type="submit" id="saveProgramBtn"
                     class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium">
                     <i class="fas fa-save mr-2"></i>
                     Save Program

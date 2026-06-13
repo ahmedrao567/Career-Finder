@@ -1,0 +1,53 @@
+Creating api in nodejs NOTES
+Post api for creating a user or product etc
+get api to get user or product etc and show it on a frontend 
+put to update the overall record of a entry
+patch to change or update the single entity of that respective record 
+delete to destroy or eliminate that entry from the database
+
+
+POST api (Create):
+first we create a router.post async function
+in whcih we have two parameters
+req and res 
+req take input from the body
+and res send a resp from the backend 
+
+in this function 
+we have inputs e.g for creating a user we have email and password
+we define them as 
+const {email,password}= req.body;
+then we check whether the user exists or not
+we create a variabel existingUser = await User.findOne where email
+this User is coming from our model and backend validates from it
+if existingUser :
+		email already exists
+otherwise we have create a newUSer = await User.create({
+	email,
+	password
+})
+
+now we send a res
+
+res.json
+we can also send a status code 
+res.status(201).json({
+email:email,
+password:password
+})
+
+this all is not mandatory 
+we can simply add a message that user created successfully
+
+
+
+
+for password safety we use bcrypt
+and that will be used as 
+hashedpassword = await bcrypt.hash(password,10)
+10 is a secuirity level that means good secuirity
+
+
+
+
+

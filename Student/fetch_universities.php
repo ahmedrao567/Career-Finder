@@ -3,20 +3,13 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-session_start();
-
-// Database configuration
-$host = 'localhost';
-$dbname = 'career_finder'; // Your database name
-$username = 'root'; // Your database username
-$password = '1234'; // Your database password
-
 header('Content-Type: application/json');
 
+// Include database config
+include 'auth/config.php';
+
 try {
-    // Create PDO connection
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // PDO connection is already established in config.php
     
     // Fetch all universities with their programs
     $stmt = $pdo->query("

@@ -85,6 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 transform: translateY(0);
             }
         }
+        
+        .program-card {
+            transition: all 0.3s ease;
+        }
+        .program-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 
@@ -203,59 +211,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- Campuses Section -->
-                <!-- Campuses Section -->
+                <!-- Programs Container -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-gray-900">Campuses</h2>
-                        <button onclick="openCampusesModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition">
-                            <i class="fas fa-plus"></i>
-                            <span>Manage Campuses</span>
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Academic Programs</h2>
+                            <p class="text-gray-600 mt-1">Manage your university's academic programs and merit information</p>
+                        </div>
+                        <button onclick="openAddProgramModal()" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Add New Program
                         </button>
                     </div>
 
                     <?php
-                    // Proper JSON decoding with error handling
-                    $campuses = [];
-                    if ($university['campuses']) {
-                        $decoded_campuses = json_decode($university['campuses'], true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_campuses)) {
-                            $campuses = $decoded_campuses;
-                        }
-                    }
+                    // Get programs from database
+                    $stmt = $pdo->prepare("SELECT * FROM programs WHERE university_id = ? ORDER BY created_at DESC");
+                    $stmt->execute([$university_id]);
+                    $programs = $stmt->fetchAll();
                     ?>
 
-                    <?php if (!empty($campuses)): ?>
-                        <div class="space-y-3">
-                            <?php foreach ($campuses as $index => $campus): ?>
-                                <?php if (is_array($campus) && isset($campus['name'])): ?>
-                                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <?php if (empty($programs)): ?>
+                        <!-- Empty State -->
+                        <div class="text-center py-12">
+                            <div class="w-24 h-24 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-graduation-cap text-purple-600 text-3xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No programs yet</h3>
+                            <p class="text-gray-600 mb-6">Start by adding your first program to showcase your offerings</p>
+                            <button onclick="openAddProgramModal()" 
+                                    class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-200 inline-flex items-center">
+                                <i class="fas fa-plus mr-2"></i> Add Your First Program
+                            </button>
+                        </div>
+                    <?php else: ?>
+                        <!-- Programs Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="programsGrid">
+                            <?php foreach ($programs as $program): ?>
+                                <div class="program-card bg-white border border-gray-200 rounded-xl p-5 hover:border-purple-300">
+                                    <div class="flex justify-between items-start mb-4">
                                         <div>
-                                            <h3 class="font-semibold text-gray-900"><?php echo htmlspecialchars($campus['name']); ?></h3>
-                                            <?php if (!empty($campus['address'])): ?>
-                                                <p class="text-gray-600 text-sm"><?php echo htmlspecialchars($campus['address']); ?></p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($campus['phone'])): ?>
-                                                <p class="text-gray-600 text-sm"><?php echo htmlspecialchars($campus['phone']); ?></p>
-                                            <?php endif; ?>
+                                            <span class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+                                                <?php echo htmlspecialchars($program['program_category']); ?>
+                                            </span>
+                                            <h4 class="font-bold text-gray-900 text-lg"><?php echo htmlspecialchars($program['program_name']); ?></h4>
                                         </div>
                                         <div class="flex space-x-2">
-                                            <button onclick="editCampus(<?php echo $index; ?>)" class="text-blue-600 hover:text-blue-800 p-2">
+                                            <button onclick="openEditProgramModal(
+                                                <?php echo $program['id']; ?>,
+                                                '<?php echo addslashes($program['program_name']); ?>',
+                                                '<?php echo addslashes($program['program_category']); ?>',
+                                                <?php echo $program['closing_merit']; ?>
+                                            )" 
+                                                    class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 transition">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button onclick="deleteCampus(<?php echo $index; ?>)" class="text-red-600 hover:text-red-800 p-2">
+                                            <button onclick="openDeleteProgramModal(<?php echo $program['id']; ?>)" 
+                                                    class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </div>
-                                <?php endif; ?>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                                            <span class="text-sm">Closing Merit:</span>
+                                            <span class="ml-auto font-semibold text-gray-900"><?php echo $program['closing_merit']; ?>%</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-calendar text-blue-500 mr-2"></i>
+                                            <span class="text-sm">Added:</span>
+                                            <span class="ml-auto text-sm text-gray-500">
+                                                <?php echo date('M d, Y', strtotime($program['created_at'])); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <?php if ($program['closing_merit'] >= 90): ?>
+                                        <div class="mt-4 inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-star mr-1"></i> Highly Competitive
+                                        </div>
+                                    <?php elseif ($program['closing_merit'] >= 75): ?>
+                                        <div class="mt-4 inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-chart-line mr-1"></i> Moderately Competitive
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-4 inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-check mr-1"></i> Standard Admission
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             <?php endforeach; ?>
                         </div>
-                    <?php else: ?>
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-building text-3xl mb-3"></i>
-                            <p>No campuses added yet</p>
-                            <p class="text-sm mt-2">Add your university campuses to show location information</p>
+                        
+                        <!-- Summary -->
+                        <div class="mt-8 pt-6 border-t border-gray-200">
+                            <div class="flex justify-between items-center text-sm text-gray-600">
+                                <div>
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Showing <?php echo count($programs); ?> program(s)
+                                </div>
+                                <div>
+                                    <button onclick="openAddProgramModal()" 
+                                            class="text-purple-600 hover:text-purple-800 font-medium">
+                                        <i class="fas fa-plus mr-1"></i> Add Another Program
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -329,115 +393,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <div class="bg-gray-100 flex items-center justify-center min-h-screen">
-                    <div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-                        <h2 class="text-2xl font-semibold text-center mb-6">Set University Password</h2>
+                <!-- Password Section -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Account Security</h2>
+                    
+                    <?php if (!empty($message)): ?>
+                        <div class="mb-4 text-center text-sm font-medium 
+                            <?= strpos($message, 'successfully') ? 'text-green-600' : 'text-red-600' ?>">
+                            <?= htmlspecialchars($message) ?>
+                        </div>
+                    <?php endif; ?>
 
-                        <?php if (!empty($message)): ?>
-                            <div class="mb-4 text-center text-sm font-medium 
-                        <?= strpos($message, 'successfully') ? 'text-green-600' : 'text-red-600' ?>">
-                                <?= htmlspecialchars($message) ?>
-                            </div>
-                        <?php endif; ?>
+                    <form method="POST" class="space-y-4">
+                        <div>
+                            <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
+                            <input type="password" name="password" id="password"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                minlength="6" required>
+                        </div>
 
-                        <form method="POST" class="space-y-5">
-                            <div>
-                                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
-                                <input type="password" name="password" id="password"
-                                    class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    minlength="6" required>
-                            </div>
+                        <div>
+                            <label for="confirm_password" class="block text-gray-700 font-medium mb-2">Confirm Password</label>
+                            <input type="password" name="confirm_password" id="confirm_password"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                minlength="6" required>
+                        </div>
 
-                            <div>
-                                <label for="confirm_password" class="block text-gray-700 font-medium mb-2">Confirm Password</label>
-                                <input type="password" name="confirm_password" id="confirm_password"
-                                    class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    minlength="6" required>
-                            </div>
-
-                            <button type="submit"
-                                class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200">
-                                Save Password
-                            </button>
-                        </form>
-                    </div>
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                            Update Password
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <!-- Programs Section -->
-        <!-- Programs Section -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <!-- Campuses Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Academic Programs</h2>
-                    <p class="text-gray-600 mt-1">Manage your university's academic programs and merit information</p>
+                    <h2 class="text-2xl font-bold text-gray-900">Campuses</h2>
+                    <p class="text-gray-600 mt-1">Manage your university campuses and locations</p>
                 </div>
-                <button onclick="openProgramsModal()"
-                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105">
+                <button onclick="openCampusesModal()"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition">
                     <i class="fas fa-plus"></i>
-                    <span>Add Program</span>
+                    <span>Manage Campuses</span>
                 </button>
             </div>
 
             <?php
-            // Get university programs
-            $programs = getUniversityPrograms($pdo, $university_id);
+            // Proper JSON decoding with error handling
+            $campuses = [];
+            if ($university['campuses']) {
+                $decoded_campuses = json_decode($university['campuses'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_campuses)) {
+                    $campuses = $decoded_campuses;
+                }
+            }
             ?>
 
-            <?php if (!empty($programs)): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php foreach ($programs as $program): ?>
-                        <div class="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-gray-50">
-                            <div class="flex justify-between items-start mb-3">
-                                <h3 class="font-bold text-lg text-gray-900 line-clamp-2"><?php echo htmlspecialchars($program['program_name']); ?></h3>
-                                <div class="flex space-x-1">
-                                    <button onclick="editProgram(
-                                <?php echo $program['id']; ?>, 
-                                '<?php echo addslashes($program['program_name']); ?>', 
-                                '<?php echo addslashes($program['program_category']); ?>', 
-                                <?php echo $program['closing_merit']; ?>
-                            )" class="text-blue-600 hover:text-blue-800 p-1 transition" title="Edit Program">
-                                        <i class="fas fa-edit text-sm"></i>
-                                    </button>
-                                    <button onclick="confirmDeleteProgram(<?php echo $program['id']; ?>)"
-                                        class="text-red-600 hover:text-red-800 p-1 transition" title="Delete Program">
-                                        <i class="fas fa-trash text-sm"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="space-y-2">
-                                <div class="flex items-center text-sm text-gray-600">
-                                    <i class="fas fa-tag mr-2 text-purple-500"></i>
-                                    <span><?php echo htmlspecialchars($program['program_category']); ?></span>
-                                </div>
-
-                                <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                                    <span class="text-sm font-medium text-gray-700">Closing Merit:</span>
-                                    <div class="flex items-center space-x-1">
-                                        <span class="text-lg font-bold text-purple-600">
-                                            <?php echo number_format($program['closing_merit'], 2); ?>
-                                        </span>
-                                        <span class="text-sm text-gray-500">%</span>
+            <?php if (!empty($campuses)): ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <?php foreach ($campuses as $index => $campus): ?>
+                        <?php if (is_array($campus) && isset($campus['name'])): ?>
+                            <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="font-semibold text-gray-900 text-lg"><?php echo htmlspecialchars($campus['name']); ?></h3>
+                                    <div class="flex space-x-2">
+                                        <button onclick="editCampus(<?php echo $index; ?>)" class="text-blue-600 hover:text-blue-800 p-1">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deleteCampus(<?php echo $index; ?>)" class="text-red-600 hover:text-red-800 p-1">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
+                                
+                                <?php if (!empty($campus['address'])): ?>
+                                    <div class="flex items-start text-gray-600 mb-2">
+                                        <i class="fas fa-map-marker-alt mt-1 mr-2 text-purple-500"></i>
+                                        <span class="text-sm"><?php echo htmlspecialchars($campus['address']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($campus['phone'])): ?>
+                                    <div class="flex items-center text-gray-600">
+                                        <i class="fas fa-phone mr-2 text-blue-500"></i>
+                                        <span class="text-sm"><?php echo htmlspecialchars($campus['phone']); ?></span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <div class="text-center py-12">
-                    <div class="w-24 h-24 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-graduation-cap text-purple-600 text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No Programs Added</h3>
-                    <p class="text-gray-600 mb-6 max-w-md mx-auto">Start by adding your university's academic programs to help students discover educational opportunities.</p>
-                    <button onclick="openProgramsModal()"
-                        class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg inline-flex items-center space-x-2 transition transform hover:scale-105">
-                        <i class="fas fa-plus"></i>
-                        <span>Add Your First Program</span>
-                    </button>
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-building text-3xl mb-3"></i>
+                    <p>No campuses added yet</p>
+                    <p class="text-sm mt-2">Add your university campuses to show location information</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -448,10 +502,296 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include 'modals/logo-modal.php'; ?>
     <?php include 'modals/campuses-modal.php'; ?>
     <?php include 'modals/contact-modal.php'; ?>
-    <?php include 'modals/programs-modal.php'; ?>
+    
+    <!-- Add Program Modal -->
+    <div id="programsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 modal-content">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 class="text-2xl font-bold text-gray-900" id="programModalTitle">Add New Program</h3>
+                <button type="button" onclick="closeModal('programsModal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="programForm" class="p-6 space-y-6">
+                <input type="hidden" id="program_id" name="program_id" value="">
+                
+                <!-- Program Name -->
+                <div>
+                    <label for="program_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Program Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="program_name" name="program_name" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus transition"
+                        placeholder="e.g., Bachelor of Computer Science">
+                </div>
+
+                <!-- Program Category -->
+                <div>
+                    <label for="program_category" class="block text-sm font-medium text-gray-700 mb-2">
+                        Program Category <span class="text-red-500">*</span>
+                    </label>
+                    <select id="program_category" name="program_category" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus transition">
+                        <option value="">Select Category</option>
+                        <option value="Engineering & Technology">Engineering & Technology</option>
+                        <option value="Computer Science & IT">Computer Science & IT</option>
+                        <option value="Business & Management">Business & Management</option>
+                        <option value="Medical & Health Sciences">Medical & Health Sciences</option>
+                        <option value="Natural Sciences">Natural Sciences</option>
+                        <option value="Social Sciences">Social Sciences</option>
+                        <option value="Arts & Humanities">Arts & Humanities</option>
+                        <option value="Law & Legal Studies">Law & Legal Studies</option>
+                        <option value="Education">Education</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Architecture">Architecture</option>
+                        <option value="Pharmacy">Pharmacy</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Closing Merit -->
+                <div>
+                    <label for="closing_merit" class="block text-sm font-medium text-gray-700 mb-2">
+                        Last Closing Merit <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="number" id="closing_merit" name="closing_merit" step="0.01" min="0" max="100" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus transition pr-12"
+                            placeholder="e.g., 85.50">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <span class="text-gray-500">%</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Enter the percentage score for last year's closing merit</p>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('programsModal')"
+                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" id="saveProgramBtn"
+                        class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium">
+                        <i class="fas fa-save mr-2"></i>
+                        <span id="saveBtnText">Save Program</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Program Confirmation Modal -->
+    <div id="deleteProgramModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 modal-content">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Delete Program</h3>
+                <p class="text-gray-600 text-center mb-6">Are you sure you want to delete this program? This action cannot be undone.</p>
+                
+                <div class="flex justify-center space-x-3">
+                    <button type="button" onclick="closeModal('deleteProgramModal')"
+                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmDeleteProgram"
+                        class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                        <i class="fas fa-trash mr-2"></i>
+                        Delete Program
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white border rounded-xl shadow-lg p-4 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="mr-3"></div>
+                <div>
+                    <h4 id="toastTitle" class="font-semibold text-gray-900"></h4>
+                    <p id="toastMessage" class="text-gray-600 text-sm mt-1"></p>
+                </div>
+                <button onclick="hideToast()" class="ml-4 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Program Modal Functions
+        function openAddProgramModal() {
+            document.getElementById('programModalTitle').textContent = 'Add New Program';
+            document.getElementById('programForm').reset();
+            document.getElementById('program_id').value = '';
+            document.getElementById('saveBtnText').textContent = 'Save Program';
+            openModal('programsModal');
+        }
+
+        function openEditProgramModal(programId, programName, programCategory, closingMerit) {
+            document.getElementById('programModalTitle').textContent = 'Edit Program';
+            document.getElementById('program_id').value = programId;
+            document.getElementById('program_name').value = decodeHtmlEntities(programName);
+            document.getElementById('program_category').value = decodeHtmlEntities(programCategory);
+            document.getElementById('closing_merit').value = closingMerit;
+            document.getElementById('saveBtnText').textContent = 'Update Program';
+            openModal('programsModal');
+        }
+
+        function openDeleteProgramModal(programId) {
+            window.currentProgramId = programId;
+            openModal('deleteProgramModal');
+        }
+
+        function decodeHtmlEntities(text) {
+            const textArea = document.createElement('textarea');
+            textArea.innerHTML = text;
+            return textArea.value;
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                const modalId = e.target.id;
+                closeModal(modalId);
+            }
+        });
+
+        // Toast Notification
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Set colors and icon based on type
+            let bgColor, iconHtml;
+            if (type === 'success') {
+                bgColor = 'border-green-200 bg-green-50';
+                iconHtml = '<div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-check text-green-600"></i></div>';
+            } else if (type === 'error') {
+                bgColor = 'border-red-200 bg-red-50';
+                iconHtml = '<div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center"><i class="fas fa-times text-red-600"></i></div>';
+            } else {
+                bgColor = 'border-blue-200 bg-blue-50';
+                iconHtml = '<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"><i class="fas fa-info text-blue-600"></i></div>';
+            }
+            
+            toast.className = `fixed top-4 right-4 z-50 ${bgColor} border rounded-xl shadow-lg p-4 max-w-sm`;
+            icon.innerHTML = iconHtml;
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+
+        // Handle program form submission
+        document.getElementById('programForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('action', 'save_program');
+            
+            // Show loading state
+            const submitBtn = document.getElementById('saveProgramBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            submitBtn.disabled = true;
+            
+            fetch('save_program.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Success!', data.message);
+                    closeModal('programsModal');
+                    
+                    // Reload the page to show updated programs
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('error', 'Error!', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'Network Error', 'Failed to save program. Please try again.');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Handle delete confirmation
+        document.getElementById('confirmDeleteProgram').addEventListener('click', function() {
+            if (!window.currentProgramId) return;
+            
+            const formData = new FormData();
+            formData.append('action', 'delete_program');
+            formData.append('program_id', window.currentProgramId);
+            
+            // Show loading state
+            const deleteBtn = this;
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+            deleteBtn.disabled = true;
+            
+            fetch('save_program.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Success!', data.message);
+                    closeModal('deleteProgramModal');
+                    
+                    // Reload the page to show updated programs
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('error', 'Error!', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'Network Error', 'Failed to delete program. Please try again.');
+            })
+            .finally(() => {
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.disabled = false;
+                window.currentProgramId = null;
+            });
+        });
+
+        // Original functions for other modals
         function openEditProfileModal() {
             console.log('Opening edit profile modal');
             document.getElementById('editProfileModal').classList.remove('hidden');
@@ -472,11 +812,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('contactModal').classList.remove('hidden');
         }
 
-        function closeModal(modalId) {
-            console.log('Closing modal:', modalId);
-            document.getElementById(modalId).classList.add('hidden');
-        }
-
         function editCampus(index) {
             console.log('Edit campus:', index);
             // Implementation for editing campus
@@ -491,246 +826,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Close modal when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal-overlay')) {
-                const modalId = e.target.id;
-                closeModal(modalId);
-            }
-        });
-
         // Prevent modal close when clicking inside modal content
         document.addEventListener('click', function(e) {
             if (e.target.closest('.modal-content')) {
                 e.stopPropagation();
             }
         });
-
-
-        // Program Management Functions
-        // Program Management Functions
-        let currentProgramId = null;
-
-        function openProgramsModal() {
-            console.log('Opening programs modal');
-            document.getElementById('programModalTitle').textContent = 'Add New Program';
-            document.getElementById('programForm').reset();
-            document.getElementById('program_id').value = '';
-            currentProgramId = null;
-            document.getElementById('programsModal').classList.remove('hidden');
-        }
-
-        function editProgram(id, name, category, merit) {
-            console.log('Editing program:', {
-                id,
-                name,
-                category,
-                merit
-            });
-
-            // Decode any encoded characters
-            const decodedName = decodeHtmlEntities(name);
-            const decodedCategory = decodeHtmlEntities(category);
-
-            document.getElementById('programModalTitle').textContent = 'Edit Program';
-            document.getElementById('program_id').value = id;
-            document.getElementById('program_name').value = decodedName;
-            document.getElementById('program_category').value = decodedCategory;
-            document.getElementById('closing_merit').value = parseFloat(merit).toFixed(2);
-            currentProgramId = id;
-            document.getElementById('programsModal').classList.remove('hidden');
-        }
-
-        function decodeHtmlEntities(text) {
-            const textArea = document.createElement('textarea');
-            textArea.innerHTML = text;
-            return textArea.value;
-        }
-
-        function confirmDeleteProgram(programId) {
-            console.log('Confirming delete for program:', programId);
-            currentProgramId = programId;
-            document.getElementById('deleteProgramModal').classList.remove('hidden');
-        }
-
-        // Initialize event listeners when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeProgramHandlers();
-        });
-
-        function initializeProgramHandlers() {
-            // Program form submission
-            const programForm = document.getElementById('programForm');
-            if (programForm) {
-                programForm.addEventListener('submit', handleProgramSubmit);
-            }
-
-            // Delete confirmation button
-            const confirmDeleteBtn = document.getElementById('confirmDeleteProgram');
-            if (confirmDeleteBtn) {
-                confirmDeleteBtn.addEventListener('click', handleProgramDelete);
-            }
-
-            // Close modal buttons
-            const closeButtons = document.querySelectorAll('[onclick^="closeModal"]');
-            closeButtons.forEach(button => {
-                const originalOnClick = button.getAttribute('onclick');
-                button.removeAttribute('onclick');
-                button.addEventListener('click', function() {
-                    const modalId = originalOnClick.match(/closeModal\('([^']+)'\)/)[1];
-                    closeModal(modalId);
-                });
-            });
-        }
-
-        function handleProgramSubmit(e) {
-            e.preventDefault();
-
-            const form = e.target;
-            const formData = new FormData(form);
-            formData.append('action', 'save_program');
-
-            // Show loading state
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-            submitBtn.disabled = true;
-
-            fetch('programs_handler.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Save response:', data);
-                    if (data.success) {
-                        closeModal('programsModal');
-                        showNotification(data.message, 'success');
-                        // Reload after a short delay to see the notification
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showNotification(data.message || 'Unknown error occurred', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    showNotification('Network error occurred while saving the program.', 'error');
-                })
-                .finally(() => {
-                    // Restore button state
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                });
-        }
-
-        function handleProgramDelete() {
-            if (!currentProgramId) {
-                showNotification('No program selected for deletion', 'error');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('action', 'delete_program');
-            formData.append('program_id', currentProgramId);
-
-            // Show loading state
-            const deleteBtn = this;
-            const originalText = deleteBtn.innerHTML;
-            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
-            deleteBtn.disabled = true;
-
-            fetch('programs_handler.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Delete response:', data);
-                    if (data.success) {
-                        closeModal('deleteProgramModal');
-                        showNotification(data.message, 'success');
-                        // Reload after a short delay to see the notification
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showNotification(data.message || 'Unknown error occurred', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    showNotification('Network error occurred while deleting the program.', 'error');
-                })
-                .finally(() => {
-                    // Restore button state
-                    deleteBtn.innerHTML = originalText;
-                    deleteBtn.disabled = false;
-                    currentProgramId = null;
-                });
-        }
-
-        // Enhanced close modal function
-        function closeModal(modalId) {
-            console.log('Closing modal:', modalId);
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-            // Reset current program ID when closing delete modal
-            if (modalId === 'deleteProgramModal') {
-                currentProgramId = null;
-            }
-        }
-
-        // Enhanced notification function
-        function showNotification(message, type = 'info') {
-            // Remove existing notifications
-            const existingNotifications = document.querySelectorAll('.custom-notification');
-            existingNotifications.forEach(notification => notification.remove());
-
-            const notification = document.createElement('div');
-            notification.className = `custom-notification fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg border-l-4 transform transition-all duration-300 ${
-        type === 'success' ? 'bg-green-50 border-green-500 text-green-700' :
-        type === 'error' ? 'bg-red-50 border-red-500 text-red-700' :
-        'bg-blue-50 border-blue-500 text-blue-700'
-    }`;
-
-            const iconClass = type === 'success' ? 'fa-check-circle' :
-                type === 'error' ? 'fa-exclamation-circle' :
-                'fa-info-circle';
-
-            notification.innerHTML = `
-        <div class="flex items-center space-x-3">
-            <i class="fas ${iconClass}"></i>
-            <span class="font-medium">${message}</span>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-
-            document.body.appendChild(notification);
-
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 5000);
-        }
     </script>
 </body>
-
 </html>

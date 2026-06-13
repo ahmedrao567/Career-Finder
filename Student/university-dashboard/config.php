@@ -21,6 +21,11 @@ if (!isset($_SESSION['university_id']) || !$_SESSION['university_logged_in']) {
     exit();
 }
 
+function sanitize_input($data) {
+    global $conn;
+    return htmlspecialchars(stripslashes(trim($data)));
+}
+
 // Get university profile data
 function getUniversityProfile($pdo, $university_id)
 {

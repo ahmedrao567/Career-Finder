@@ -1,0 +1,11 @@
+react hook form
+
+in this we dont need to make states 
+e.g {name,email password}=useState("")
+we can just use useForms hook from react-hook-forms
+
+in this we can easily track the input data whenever it changes 
+we can only say ...register ("name")
+it gives the value to input name and it takes the responsibilty of onchange 
+and also it prevent the cpmponnet to re render
+

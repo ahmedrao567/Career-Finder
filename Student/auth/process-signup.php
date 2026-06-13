@@ -39,11 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Send OTP email
         if (sendOTP($email, $otp, $full_name, 'user')) {
             $_SESSION['verify_email'] = $email;
-            $_SESSION['success'] = "Account created successfully! Please check your email for verification code.";
+            $_SESSION['success'] = "Please check your email for verification code.";
             header('Location: verify-otp.php');
             exit();
         } else {
-            $_SESSION['error'] = "Account created but failed to send verification email. Please contact support.";
+            $_SESSION['error'] = "Failed to send verification email. Please contact support.";
             header('Location: signup.php');
             exit();
         }

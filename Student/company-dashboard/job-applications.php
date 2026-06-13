@@ -197,67 +197,124 @@ $rejected_count = count(array_filter($applications, fn($app) => $app['status'] =
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex flex-col space-y-2">
-                        <?php if($cv_exists): ?>
-                            <a href="<?php echo $cv_path; ?>" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm flex items-center">
-                                <i class="fas fa-download mr-1"></i> View CV
-                            </a>
-                        <?php else: ?>
-                            <span class="bg-gray-300 text-gray-600 px-3 py-1 rounded text-sm flex items-center">
-                                <i class="fas fa-times mr-1"></i> No CV
-                            </span>
-                        <?php endif; ?>
-
-                        <!-- Update status -->
-                        <form method="POST" class="flex space-x-1">
-                            <input type="hidden" name="application_id" value="<?php echo $app['id']; ?>">
-                            <select name="status" class="border px-2 py-1 rounded text-sm">
-                                <option value="pending" <?php echo $app['status']==='pending'?'selected':'';?>>Pending</option>
-                                <option value="reviewed" <?php echo $app['status']==='reviewed'?'selected':'';?>>Reviewed</option>
-                                <option value="accepted" <?php echo $app['status']==='accepted'?'selected':'';?>>Accepted</option>
-                                <option value="rejected" <?php echo $app['status']==='rejected'?'selected':'';?>>Rejected</option>
-                            </select>
-                            <button type="submit" name="update_status" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-sm">Update</button>
-                        </form>
-
-                        <!-- View full profile -->
-                        <button onclick="openApplicationModal(<?php echo $app['id']; ?>)" class="border px-3 py-1 rounded text-sm hover:bg-gray-50 flex items-center">
-                            <i class="fas fa-eye mr-1"></i> View Details
-                        </button>
-
-                        <!-- Match Score -->
-                        <div id="match-score-<?php echo $app['id']; ?>" class="text-sm text-gray-700 mt-1">
+                    <div class="flex flex-col space-y-3 w-64">
+                        <!-- Match Score Card -->
+                        <div id="match-score-<?php echo $app['id']; ?>" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
                             <?php
+                            $match_data = null;
+                            $match_error = null;
+                            
                             if($cv_exists && !empty(trim($job_text))){
-                                $curl = curl_init();
-                                $formData = [
-                                    'job_text' => $job_text,
-                                    'cv_file' => new CURLFile(realpath($cv_path))
-                                ];
-                                curl_setopt_array($curl, [
-                                    CURLOPT_URL => 'http://127.0.0.1:8001/match-score',
-                                    CURLOPT_POST => true,
-                                    CURLOPT_POSTFIELDS => $formData,
-                                    CURLOPT_RETURNTRANSFER => true,
-                                    CURLOPT_TIMEOUT => 10
-                                ]);
-                                $response = curl_exec($curl);
-                                $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                                curl_close($curl);
-                                if($httpcode==200){
-                                    $data = json_decode($response,true);
-                                    echo "<strong>CV Category:</strong> {$data['cv_category']}<br>";
-                                    echo "<strong>Similarity:</strong> {$data['embedding_similarity']}%<br>";
-                                    echo "<strong>ML Confidence:</strong> {$data['ml_confidence']}%<br>";
-                                    echo "<strong>Final Match Score:</strong> {$data['match_score']}%";
-                                } else {
-                                    echo "Match score unavailable";
+                                try {
+                                    $curl = curl_init();
+                                    $formData = [
+                                        'job_text' => $job_text,
+                                        'cv_file' => new CURLFile(realpath($cv_path))
+                                    ];
+                                    curl_setopt_array($curl, [
+                                        CURLOPT_URL => 'http://127.0.0.1:8001/match-score',
+                                        CURLOPT_POST => true,
+                                        CURLOPT_POSTFIELDS => $formData,
+                                        CURLOPT_RETURNTRANSFER => true,
+                                        CURLOPT_TIMEOUT => 10,
+                                        CURLOPT_CONNECTTIMEOUT => 5
+                                    ]);
+                                    $response = curl_exec($curl);
+                                    $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                                    
+                                    if($httpcode == 200){
+                                        $match_data = json_decode($response, true);
+                                    } else {
+                                        $match_error = "API Error (Code: $httpcode)";
+                                    }
+                                } catch (Exception $e) {
+                                    $match_error = "Connection failed";
                                 }
                             } else {
-                                echo "CV or Job description missing";
+                                $match_error = "CV or job info missing";
                             }
+                            
+                            if($match_data):
+                                $score = $match_data['match_score'];
+                                $similarity = $match_data['embedding_similarity'];
+                                $confidence = $match_data['ml_confidence'];
+                                $category = $match_data['cv_category'];
+                                
+                                // Determine color based on score
+                                if($score >= 80) { $color_class = 'text-green-700 bg-green-100'; $bar_class = 'bg-green-500'; $badge = 'bg-green-100 text-green-800'; }
+                                elseif($score >= 60) { $color_class = 'text-yellow-700 bg-yellow-100'; $bar_class = 'bg-yellow-500'; $badge = 'bg-yellow-100 text-yellow-800'; }
+                                elseif($score >= 40) { $color_class = 'text-orange-700 bg-orange-100'; $bar_class = 'bg-orange-500'; $badge = 'bg-orange-100 text-orange-800'; }
+                                else { $color_class = 'text-red-700 bg-red-100'; $bar_class = 'bg-red-500'; $badge = 'bg-red-100 text-red-800'; }
                             ?>
+                                <!-- Main Score -->
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <p class="text-xs text-gray-600 font-medium">Overall Match</p>
+                                        <p class="text-2xl font-bold text-gray-900"><?php echo $score; ?>%</p>
+                                    </div>
+                                    <div class="<?php echo $color_class; ?> w-16 h-16 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-xl"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div class="mb-3">
+                                    <div class="w-full bg-gray-300 rounded-full h-2">
+                                        <div class="<?php echo $bar_class; ?> h-2 rounded-full" style="width: <?php echo $score; ?>%"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Metrics Grid -->
+                                <div class="grid grid-cols-2 gap-2 mb-3">
+                                    <div class="bg-white border border-gray-200 rounded p-2">
+                                        <p class="text-xs text-gray-600">Semantic Match</p>
+                                        <p class="text-sm font-semibold text-gray-900"><?php echo round($similarity, 1); ?>%</p>
+                                    </div>
+                                    <div class="bg-white border border-gray-200 rounded p-2">
+                                        <p class="text-xs text-gray-600">Confidence</p>
+                                        <p class="text-sm font-semibold text-gray-900"><?php echo round($confidence, 1); ?>%</p>
+                                    </div>
+                                </div>
+
+                                <!-- Category Badge -->
+                                <div class="<?php echo $badge; ?> rounded px-2 py-1 text-xs font-medium text-center">
+                                    Category: <?php echo ucfirst($category); ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-exclamation-circle text-gray-400"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-600 font-medium">Match Score</p>
+                                        <p class="text-sm text-gray-700"><?php echo $match_error; ?></p>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-2">
+                            <?php if($cv_exists): ?>
+                                <a href="<?php echo $cv_path; ?>" target="_blank" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm flex items-center justify-center transition">
+                                    <i class="fas fa-download mr-1"></i> View CV
+                                </a>
+                            <?php else: ?>
+                                <span class="flex-1 bg-gray-300 text-gray-600 px-3 py-2 rounded text-sm flex items-center justify-center">
+                                    <i class="fas fa-times mr-1"></i> No CV
+                                </span>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Update Status Form -->
+                        <form method="POST" class="flex flex-col space-y-2">
+                            <input type="hidden" name="application_id" value="<?php echo $app['id']; ?>">
+                            <select name="status" class="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="pending" <?php echo $app['status']==='pending'?'selected':'';?>>📋 Pending</option>
+                                <option value="reviewed" <?php echo $app['status']==='reviewed'?'selected':'';?>>👀 Reviewed</option>
+                                <option value="accepted" <?php echo $app['status']==='accepted'?'selected':'';?>>✅ Accepted</option>
+                                <option value="rejected" <?php echo $app['status']==='rejected'?'selected':'';?>>❌ Rejected</option>
+                            </select>
+                            <button type="submit" name="update_status" class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium transition">Update Status</button>
+                        </form>
                     </div>
                 </div>
             <?php endforeach; ?>

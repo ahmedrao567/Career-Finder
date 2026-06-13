@@ -18,23 +18,23 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Campus Name *</label>
                         <input type="text" name="campus_name" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 input-focus"
-                               placeholder="e.g., Main Campus, City Campus">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 input-focus"
+                            placeholder="e.g., Main Campus, City Campus">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
                         <textarea name="campus_address" rows="2"
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 input-focus"
-                                  placeholder="Full campus address"></textarea>
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 input-focus"
+                            placeholder="Full campus address"></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                         <input type="tel" name="campus_phone"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 input-focus"
-                               placeholder="e.g., (042) 123-4567">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 input-focus"
+                            placeholder="e.g., (042) 123-4567">
                     </div>
                     <button type="button" onclick="addCampus()"
-                            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition">
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition">
                         <i class="fas fa-plus mr-2"></i>Add Campus
                     </button>
                 </div>
@@ -50,11 +50,11 @@
 
             <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 mt-6">
                 <button type="button" onclick="closeModal('campusesModal')"
-                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition">
+                    class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition">
                     Cancel
                 </button>
                 <button type="button" onclick="saveCampuses()"
-                        class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition">
+                    class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition">
                     Save Changes
                 </button>
             </div>
@@ -137,39 +137,176 @@
         if (newName !== null) {
             const newAddress = prompt('Enter new campus address:', campus.address || '');
             const newPhone = prompt('Enter new campus phone:', campus.phone || '');
-            
+
             campuses[index] = {
                 name: newName.trim(),
                 address: newAddress ? newAddress.trim() : '',
                 phone: newPhone ? newPhone.trim() : ''
             };
-            
+
             renderCampuses();
             showNotification('Campus updated successfully!', 'success');
         }
     }
 
     function saveCampuses() {
-        // This would typically send data to server via AJAX
-        console.log('Saving campuses:', campuses);
-        showNotification('Campuses saved successfully!', 'success');
-        closeModal('campusesModal');
+    // Validate campuses data
+    if (!campuses || campuses.length === 0) {
+        showNotification('No campuses to save', 'warning');
+        return;
     }
 
-    // Initialize campuses list on modal open
-    document.addEventListener('DOMContentLoaded', function() {
-        const campusesModal = document.getElementById('campusesModal');
-        campusesModal.addEventListener('click', function(e) {
-            if (e.target === this) {
+    // Show loading state
+    const saveButton = document.querySelector('[onclick="saveCampuses()"]');
+    const originalText = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    saveButton.disabled = true;
+
+    // Send data to server via AJAX
+    fetch('save_campuses.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            campuses: campuses
+        }),
+        credentials: 'same-origin' // Include cookies for session
+    })
+    .then(response => {
+        // Check if response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server response:', data); // Debug
+        
+        if (data.success) {
+            showNotification(data.message, 'success');
+            
+            // Update local campuses with sanitized version from server
+            if (data.campuses) {
+                campuses = data.campuses;
                 renderCampuses();
             }
-        });
+            
+            // Close modal after short delay
+            setTimeout(() => {
+                closeModal('campusesModal');
+            }, 1000);
+            
+        } else {
+            showNotification(data.message || 'Failed to save campuses', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        
+        let errorMessage = 'Failed to save campuses. ';
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage += 'Please check your internet connection.';
+        } else {
+            errorMessage += 'Please try again or contact support.';
+        }
+        
+        showNotification(errorMessage, 'error');
+    })
+    .finally(() => {
+        // Always restore button state
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
     });
+}
 
-    function showNotification(message, type = 'info') {
-        // Simple notification implementation
-        alert(message);
+// Enhanced showNotification function
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existing = document.querySelectorAll('.custom-notification');
+    existing.forEach(el => el.remove());
+    
+    // Determine colors based on type
+    let bgColor, textColor, borderColor, icon;
+    switch(type) {
+        case 'success':
+            bgColor = 'bg-green-50';
+            textColor = 'text-green-800';
+            borderColor = 'border-green-200';
+            icon = 'check-circle';
+            break;
+        case 'error':
+            bgColor = 'bg-red-50';
+            textColor = 'text-red-800';
+            borderColor = 'border-red-200';
+            icon = 'exclamation-circle';
+            break;
+        case 'warning':
+            bgColor = 'bg-yellow-50';
+            textColor = 'text-yellow-800';
+            borderColor = 'border-yellow-200';
+            icon = 'exclamation-triangle';
+            break;
+        default:
+            bgColor = 'bg-blue-50';
+            textColor = 'text-blue-800';
+            borderColor = 'border-blue-200';
+            icon = 'info-circle';
     }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `custom-notification fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg border ${bgColor} ${textColor} ${borderColor} transform transition-all duration-300 animate-slide-in`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-${icon} mr-3 text-lg"></i>
+            <div class="flex-1">
+                <p class="font-medium">${message}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 ${textColor} hover:opacity-75">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Add animation style
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+        style.remove();
+    }, 5000);
+}
 
     // Initial render
     renderCampuses();

@@ -2,9 +2,9 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once 'phpmailer/src/Exception.php';
-require_once 'phpmailer/src/PHPMailer.php';
-require_once 'phpmailer/src/SMTP.php';; // Adjust path as needed
+require_once __DIR__ . '/phpmailer/src/Exception.php';
+require_once __DIR__ . '/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/phpmailer/src/SMTP.php';
 
 function sendOTP($email, $otp, $name, $type = 'user') {
     $mail = new PHPMailer(true);
@@ -14,13 +14,13 @@ function sendOTP($email, $otp, $name, $type = 'user') {
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com'; // Your SMTP server
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'muneeb.amed0@gmail.com'; // Your email
-        $mail->Password   = 'cbfgzztxvhdtinxr'; // Your app password
+        $mail->Username   = 'ahmedikram567@gmail.com'; // Your email
+        $mail->Password   = 'kuljrntfpqgomvwj'; // Your app password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
         
         // Recipients
-        $mail->setFrom('muneeb.amed0@gmail.com', 'CareerFinder');
+        $mail->setFrom('ahmedikram567@gmail.com', 'career_finder');
         $mail->addAddress($email, $name);
         
         // Content

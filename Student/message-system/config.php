@@ -2,10 +2,10 @@
 // config.php
 session_start();
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'career_finder');
-define('DB_USER', 'root');
-define('DB_PASS', '1234');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'career_finder');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASSWORD') ?: '');
 
 class Database {
     private $connection;

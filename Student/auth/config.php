@@ -2,10 +2,10 @@
 session_start();
 
 // Database configuration
-$host = 'localhost';
-$dbname = 'career_finder';
-$username = 'root';
-$password = '1234';
+$host = getenv('DB_HOST') ?: 'localhost';
+$dbname = getenv('DB_NAME') ?: 'career_finder';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -21,19 +21,19 @@ define('BASE_URL', 'http://localhost:8000');
 // Email Configuration (Update with your SMTP details)
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'muneeb.amed0@gmail.com');
-define('SMTP_PASSWORD', 'ynxbtgkxneaxykyg');
-define('SMTP_FROM', 'muneeb.amed0@gmail.com');
-define('SMTP_FROM_NAME', 'CareerFinder');
+define('SMTP_USERNAME', 'ahmedikram567@gmail.com');
+define('SMTP_PASSWORD', 'kuljrntfpqgomvwj');
+define('SMTP_FROM', 'ahmedikram567@gmail.com');
+define('SMTP_FROM_NAME', 'career_finder');
 
 // Generate OTP Function
 function generateOTP() {
     return sprintf("%06d", mt_rand(1, 999999));
 }
 
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/phpmailer/src/Exception.php';
+require_once __DIR__ . '/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/phpmailer/src/SMTP.php';
 // Send OTP Email Function
 function sendOTPEmail($toEmail, $toName, $otpCode) {
     

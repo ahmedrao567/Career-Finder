@@ -17,13 +17,13 @@ class CompanyEmailSender {
         $this->mail->isSMTP();
         $this->mail->Host       = 'smtp.gmail.com'; // Your SMTP server
         $this->mail->SMTPAuth   = true;
-        $this->mail->Username   = 'muneeb.amed0@gmail.com'; // Your email
-        $this->mail->Password   = 'cbfgzztxvhdtinxr'; // Your app password
+        $this->mail->Username   = 'ahmedikram567@gmail.com'; // Your email
+        $this->mail->Password   = 'kuljrntfpqgomvwj'; // Your app password
         $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $this->mail->Port       = 587;
         
         // Sender
-        $this->mail->setFrom('your-email@gmail.com', 'CareerFinder');
+        $this->mail->setFrom('ahmedikram567@gmail.com', 'career_finder');
         $this->mail->isHTML(true);
     }
     

@@ -7,10 +7,10 @@ use PHPMailer\PHPMailer\SMTP;
 session_start();
 
 // Database configuration
-$host = 'localhost';
-$dbname = 'career_finder';
-$username = 'root';
-$password = '1234';
+$host = getenv('DB_HOST') ?: 'localhost';
+$dbname = getenv('DB_NAME') ?: 'career_finder';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -23,10 +23,10 @@ try {
 // PHPMailer configuration
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'muneeb.amed0@gmail.com');
-define('SMTP_PASSWORD', 'ynxbtgkxneaxykyg');
-define('SMTP_FROM', 'muneeb.amed0@gmail.com');
-define('SMTP_FROM_NAME', 'CareerFinder');
+define('SMTP_USERNAME', 'ahmedikram567@gmail.com');
+define('SMTP_PASSWORD', 'kuljrntfpqgomvwj');
+define('SMTP_FROM', 'ahmedikram567@gmail.com');
+define('SMTP_FROM_NAME', 'career_finder');
 
 define('BASE_URL', 'http://localhost/career-finder');
 

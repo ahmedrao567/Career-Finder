@@ -11,10 +11,10 @@ echo "Timestamp: " . time() . "<br>";
 
 echo "<h3>Database Time:</h3>";
 
-$host = 'localhost';
-$dbname = 'career_finder';
-$username = 'root';
-$password = '1234';
+$host = getenv('DB_HOST') ?: 'localhost';
+$dbname = getenv('DB_NAME') ?: 'career_finder';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);

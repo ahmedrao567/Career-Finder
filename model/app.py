@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from sentence_transformers import SentenceTransformer, util
 from docx import Document
 from flask_cors import CORS  # <-- import CORS
 
@@ -7,11 +6,19 @@ app = Flask(__name__)
 CORS(app)
 import joblib, os
 import PyPDF2
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+try:
+    from sentence_transformers import SentenceTransformer, util
+except Exception:
+    SentenceTransformer = None
+    util = None
 
 
 # Load pretrained models
 clf = joblib.load("resume_classifier.pkl")
-embed_model = SentenceTransformer('all-MiniLM-L6-v2')
+embed_model = SentenceTransformer('all-MiniLM-L6-v2') if SentenceTransformer else None
 
 
 # =========================
@@ -42,6 +49,11 @@ def read_cv(file_path):
 
 
 def compute_similarity(job_text, cv_text):
+    if embed_model is None or util is None:
+        vectorizer = TfidfVectorizer(stop_words='english')
+        vectors = vectorizer.fit_transform([job_text, cv_text])
+        return float(cosine_similarity(vectors[0], vectors[1]).item())
+
     job_emb = embed_model.encode(job_text, convert_to_tensor=True, normalize_embeddings=True)
     cv_emb = embed_model.encode(cv_text, convert_to_tensor=True, normalize_embeddings=True)
     return float(util.cos_sim(job_emb, cv_emb).item())
@@ -93,4 +105,4 @@ def match_score():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8001, debug=True)
+    app.run(host="0.0.0.0", port=8002, debug=True)

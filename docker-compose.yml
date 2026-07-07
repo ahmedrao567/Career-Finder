@@ -13,9 +13,7 @@ services:
       - ./finaldatabase.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
 
   student-web:
-    build:
-      context: ./Student
-      dockerfile: Dockerfile
+    image: ahmedikram567/career-finder-web:latest
     restart: unless-stopped
     depends_on:
       - db
@@ -30,9 +28,7 @@ services:
       - student_uploads:/var/www/html/assets/uploads
 
   model-api:
-    build:
-      context: ./model
-      dockerfile: Dockerfile
+    image: ahmedikram567/career-finder-api:latest
     restart: unless-stopped
     ports:
       - "8002:8002"

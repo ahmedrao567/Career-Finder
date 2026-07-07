@@ -315,7 +315,7 @@ INSERT INTO universities (
     province,
     is_recognized,
     otp_code,
-    otp_expiry,
+    
     is_active
 ) VALUES
 (

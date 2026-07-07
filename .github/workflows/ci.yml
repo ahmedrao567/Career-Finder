@@ -1,0 +1,60 @@
+name: Career Finder CI
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  WEB_IMAGE: ahmedikram567/career-finder-web
+  MODEL_IMAGE: ahmedikram567/career-finder-api
+
+jobs:
+  docker-build:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    ####################################################
+    # Build & Push Student Web Image
+    ####################################################
+
+    - name: Build and Push Student Web
+      uses: docker/build-push-action@v6
+      with:
+        context: ./Student
+        file: ./Student/Dockerfile
+        push: true
+        tags: |
+          ${{ env.WEB_IMAGE }}:latest
+          ${{ env.WEB_IMAGE }}:${{ github.sha }}
+
+    ####################################################
+    # Build & Push ML Model Image
+    ####################################################
+
+    - name: Build and Push ML Model
+      uses: docker/build-push-action@v6
+      with:
+        context: ./model
+        file: ./model/Dockerfile
+        push: true
+        tags: |
+          ${{ env.MODEL_IMAGE }}:latest
+          ${{ env.MODEL_IMAGE }}:${{ github.sha }}

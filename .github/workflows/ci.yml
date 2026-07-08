@@ -31,9 +31,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    ####################################################
-    # Build & Push Student Web Image
-    ####################################################
+   
 
     - name: Build and Push Student Web
       uses: docker/build-push-action@v6
@@ -45,9 +43,7 @@ jobs:
           ${{ env.WEB_IMAGE }}:latest
           ${{ env.WEB_IMAGE }}:${{ github.sha }}
 
-    ####################################################
-    # Build & Push ML Model Image
-    ####################################################
+
 
     - name: Build and Push ML Model
       uses: docker/build-push-action@v6

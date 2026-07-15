@@ -212,12 +212,12 @@ $rejected_count = count(array_filter($applications, fn($app) => $app['status'] =
                                         'cv_file' => new CURLFile(realpath($cv_path))
                                     ];
                                     curl_setopt_array($curl, [
-                                        CURLOPT_URL => 'http://127.0.0.1:8001/match-score',
+                                        CURLOPT_URL => 'http://model-api:8002/match-score',
                                         CURLOPT_POST => true,
                                         CURLOPT_POSTFIELDS => $formData,
                                         CURLOPT_RETURNTRANSFER => true,
-                                        CURLOPT_TIMEOUT => 10,
-                                        CURLOPT_CONNECTTIMEOUT => 5
+                                        CURLOPT_TIMEOUT => 120,
+                                        CURLOPT_CONNECTTIMEOUT => 10
                                     ]);
                                     $response = curl_exec($curl);
                                     $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);

@@ -18,4 +18,4 @@ COPY app.py resume_classifier.pkl ./
 
 EXPOSE 8002
 
-CMD ["gunicorn", "-b", "0.0.0.0:8002", "app:app"]
+CMD ["gunicorn", "--timeout", "120", "-b", "0.0.0.0:8002", "app:app"]

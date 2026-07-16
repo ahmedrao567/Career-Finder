@@ -114,5 +114,5 @@ jobs:
       - name: Run AI Agent
         if: failure()
         run: |
-          python ai-agent-cicd/ai_agent.py logs.txt
+          python ai-agent-cicd/ai-agent.py logs.txt
 

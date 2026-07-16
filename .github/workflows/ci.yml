@@ -1,3 +1,4 @@
+
 name: Career Finder CI/CD
 
 on:
@@ -73,8 +74,8 @@ jobs:
 
       - name: Health Check
         run: |
-         sleep 20
-         curl --fail http://google123456.com
+          sleep 20
+          curl --fail http://${{ secrets.EC2_HOSTtt }}/health
 
       - name: Collect Docker Logs
         if: failure()
@@ -90,9 +91,28 @@ jobs:
             docker ps -a
 
             echo ""
+
             echo "===== DOCKER COMPOSE PS ====="
             docker compose ps
 
             echo ""
+
             echo "===== DOCKER COMPOSE LOGS ====="
             docker compose logs
+
+      - name: Create Logs File for AI Agent
+        if: failure()
+        run: |
+          cat << EOF > logs.txt
+          Pipeline Failure Detected.
+
+          Deployment or Health Check failed.
+
+          Please refer to the Docker and Docker Compose logs printed above in the GitHub Actions console.
+          EOF
+
+      - name: Run AI Agent
+        if: failure()
+        run: |
+          python ai-agent-cicd/ai_agent.py logs.txt
+

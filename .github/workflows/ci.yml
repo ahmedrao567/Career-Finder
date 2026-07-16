@@ -1,4 +1,3 @@
-
 name: Career Finder CI/CD
 
 on:
@@ -75,44 +74,43 @@ jobs:
       - name: Health Check
         run: |
           sleep 20
-          curl --fail http://${{ secrets.EC2_HOSTtt }}/health
+          curl --fail http://${{ secrets.EC2_HOST }}/health
 
-      - name: Collect Docker Logs
-        if: failure()
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /home/ubuntu/career-finder
-
-            echo "===== DOCKER PS ====="
-            docker ps -a
-
-            echo ""
-
-            echo "===== DOCKER COMPOSE PS ====="
-            docker compose ps
-
-            echo ""
-
-            echo "===== DOCKER COMPOSE LOGS ====="
-            docker compose logs
-
-      - name: Create Logs File for AI Agent
+      - name: Configure SSH
         if: failure()
         run: |
-          cat << EOF > logs.txt
-          Pipeline Failure Detected.
+          mkdir -p ~/.ssh
 
-          Deployment or Health Check failed.
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-          Please refer to the Docker and Docker Compose logs printed above in the GitHub Actions console.
-          EOF
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Collect Deployment Logs
+        if: failure()
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+          ubuntu@${{ secrets.EC2_HOST }} "
+          cd /home/ubuntu/career-finder
+
+          echo '===== DOCKER PS ====='
+          docker ps -a
+
+          echo ''
+          echo '===== DOCKER COMPOSE PS ====='
+          docker compose ps
+
+          echo ''
+          echo '===== DOCKER COMPOSE LOGS ====='
+          docker compose logs
+          " > logs.txt
+
+      - name: Display Collected Logs
+        if: failure()
+        run: |
+          cat logs.txt
 
       - name: Run AI Agent
         if: failure()
         run: |
           python ai-agent-cicd/ai-agent.py logs.txt
-

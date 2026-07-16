@@ -64,7 +64,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/career-finder
+            cd /home/ubuntu
 
             docker compose pull
             docker compose up -d
@@ -91,10 +91,14 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no \
           ubuntu@${{ secrets.EC2_HOST }} "
-          cd /home/ubuntu/career-finder
+          cd /home/ubuntu
 
           echo '===== DOCKER PS ====='
           docker ps -a
+
+          echo ''
+          echo '===== DOCKER IMAGES ====='
+          docker images
 
           echo ''
           echo '===== DOCKER COMPOSE PS ====='
@@ -103,6 +107,7 @@ jobs:
           echo ''
           echo '===== DOCKER COMPOSE LOGS ====='
           docker compose logs
+
           " > logs.txt
 
       - name: Display Collected Logs

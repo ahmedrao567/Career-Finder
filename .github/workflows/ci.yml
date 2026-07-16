@@ -54,6 +54,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -67,3 +70,29 @@ jobs:
             docker compose up -d
 
             docker image prune -f
+
+      - name: Health Check
+        run: |
+         sleep 20
+         curl --fail http://google123456.com
+
+      - name: Collect Docker Logs
+        if: failure()
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/career-finder
+
+            echo "===== DOCKER PS ====="
+            docker ps -a
+
+            echo ""
+            echo "===== DOCKER COMPOSE PS ====="
+            docker compose ps
+
+            echo ""
+            echo "===== DOCKER COMPOSE LOGS ====="
+            docker compose logs

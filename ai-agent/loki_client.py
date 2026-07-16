@@ -1,20 +1,32 @@
 import requests
+import time
 
 LOKI = "http://localhost:3100"
 
+
 def get_logs():
 
-    query = '{container=~".+"}'
+    now = int(time.time() * 1e9)
+    five_minutes_ago = now - (5 * 60 * 1_000_000_000)
 
-    url = f"{LOKI}/loki/api/v1/query_range"
+    query = '{container=~"career-finder-db-1|career-finder-student-web-1|career-finder-model-api-1"}'
 
     params = {
         "query": query,
-        "limit": 20
+        "start": five_minutes_ago,
+        "end": now,
+        "limit": 50,
+        "direction": "BACKWARD"
     }
 
-    r = requests.get(url, params=params)
+    response = requests.get(
+        f"{LOKI}/loki/api/v1/query_range",
+        params=params,
+        timeout=10
+    )
 
-    data = r.json()
+    response.raise_for_status()
+
+    data = response.json()
 
     return data["data"]["result"]

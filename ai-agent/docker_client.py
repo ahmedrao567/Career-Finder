@@ -8,7 +8,7 @@ def get_containers():
 
     for c in client.containers.list():
 
-        # Only Career Finder containers
+      
         if not c.name.startswith("career-finder-"):
             continue
 

@@ -1,6 +1,3 @@
-// ================================
-// Live Clock
-// ================================
 
 function updateTime() {
     const now = new Date();
@@ -13,9 +10,6 @@ setInterval(updateTime, 1000);
 updateTime();
 
 
-// ================================
-// Load Containers
-// ================================
 
 async function loadContainers() {
 
@@ -64,10 +58,6 @@ async function loadContainers() {
 }
 
 
-// ================================
-// Load Logs
-// ================================
-
 async function loadLogs() {
 
     try {
@@ -95,9 +85,6 @@ async function loadLogs() {
 }
 
 
-// ================================
-// AI Analysis
-// ================================
 
 async function loadAnalysis() {
 
@@ -124,25 +111,51 @@ async function loadAnalysis() {
     }
 
 }
+async function loadHistory() {
+
+    const response = await fetch("/api/history");
+
+    const data = await response.json();
+
+    let html = "";
+
+    data.forEach(item => {
+
+        html += `
+
+        <div class="history-card">
+
+            <h3>LOG</h3>
+            <p>${item.log}</p>
+
+            <h3>AI Analysis</h3>
+            <p>${item.analysis}</p>
+            <small>
+                ${item.timestamp}
+            </small>
+
+        </div>
+
+        `;
+
+    });
+
+    document.getElementById("history").innerHTML = html;
+
+}
 
 
-// ================================
-// Initial Load
-// ================================
 
 loadContainers();
 loadLogs();
 loadAnalysis();
-
-
-// ================================
-// Auto Refresh Every 10 Seconds
-// ================================
+loadHistory();
 
 setInterval(() => {
 
     loadContainers();
     loadLogs();
     loadAnalysis();
+    loadHistory();
 
-}, 10000);
+}, 5000);

@@ -2,65 +2,96 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>AI DevOps Monitoring Dashboard</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+
 </head>
 
 <body>
 
     <!-- Sidebar -->
+
     <div class="sidebar">
+
         <h2>AI DevOps</h2>
 
         <ul>
+
             <li class="active">Dashboard</li>
             <li>Containers</li>
             <li>Logs</li>
             <li>AI Analysis</li>
-            <li>Incidents</li>
+            <li>AI History</li>
             <li>Settings</li>
+
         </ul>
+
     </div>
 
-    <!-- Main Content -->
+
+    <!-- Main Dashboard -->
+
     <div class="main">
 
         <!-- Header -->
+
         <header>
+
             <h1>AI DevOps Monitoring Dashboard</h1>
+
             <div id="time"></div>
+
         </header>
 
+
+
         <!-- Dashboard Cards -->
+
         <section class="cards">
 
             <div class="card">
-                <h2>Containers</h2>
+
+                <h2>Total Containers</h2>
                 <p id="containers">0</p>
+
             </div>
+
 
             <div class="card green">
+
                 <h2>Healthy</h2>
                 <p id="healthy">0</p>
+
             </div>
+
 
             <div class="card red">
+
                 <h2>Critical</h2>
                 <p id="critical">0</p>
+
             </div>
 
+
             <div class="card blue">
+
                 <h2>Last Scan</h2>
                 <p id="scan">Never</p>
+
             </div>
 
         </section>
 
-        <!-- Container Table -->
+
+
+        <!-- Container Status -->
+
         <section class="status">
 
             <h2>Container Status</h2>
@@ -70,9 +101,11 @@
                 <thead>
 
                     <tr>
-                        <th>Container</th>
+
+                        <th>Container Name</th>
                         <th>Image</th>
                         <th>Status</th>
+
                     </tr>
 
                 </thead>
@@ -85,18 +118,26 @@
 
         </section>
 
+
+
         <!-- Live Logs -->
+
         <section class="logs">
 
             <h2>Live Logs</h2>
 
             <div id="logs">
 
+                Waiting for logs...
+
             </div>
 
         </section>
 
+
+
         <!-- AI Analysis -->
+
         <section class="analysis">
 
             <h2>AI Analysis</h2>
@@ -109,7 +150,10 @@
 
         </section>
 
-        <!-- Recommendation -->
+
+
+        <!-- AI Recommendation -->
+
         <section class="recommendation">
 
             <h2>Recommendation</h2>
@@ -117,6 +161,22 @@
             <div id="recommendation">
 
                 Waiting...
+
+            </div>
+
+        </section>
+
+
+
+        <!-- AI Incident History -->
+
+        <section class="history">
+
+            <h2>AI Incident History</h2>
+
+            <div id="history">
+
+                No incidents detected yet.
 
             </div>
 

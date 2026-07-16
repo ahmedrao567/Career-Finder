@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from docx import Document
-from flask_cors import CORS  # <-- import CORS
+from flask_cors import CORS 
 
 app = Flask(__name__)
 CORS(app)
@@ -16,14 +16,12 @@ except Exception:
     util = None
 
 
-# Load pretrained models
+
 clf = joblib.load("resume_classifier.pkl")
 embed_model = SentenceTransformer('all-MiniLM-L6-v2') if SentenceTransformer else None
 
 
-# =========================
-# Helpers
-# =========================
+
 def read_docx(file_path):
     doc = Document(file_path)
     return "\n".join([p.text.strip() for p in doc.paragraphs if p.text.strip()])
@@ -59,17 +57,15 @@ def compute_similarity(job_text, cv_text):
     return float(util.cos_sim(job_emb, cv_emb).item())
 
 
-# =========================
-# API Endpoint
-# =========================
+
 @app.route('/match-score', methods=['POST'])
 def match_score():
-    # Get job description text
+    
     job_text = request.form.get('job_text')
     if not job_text:
         return jsonify({"error": "Job description text is required"}), 400
 
-    # Get CV file
+   
     if 'cv_file' not in request.files:
         return jsonify({"error": "CV file is required"}), 400
 

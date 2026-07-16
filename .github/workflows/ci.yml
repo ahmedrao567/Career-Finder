@@ -74,7 +74,7 @@ jobs:
       - name: Health Check
         run: |
           sleep 20
-          curl --fail http://${{ secrets.EC2_HOST }}/health
+          curl --fail http://${{ secrets.EC2_HOST }}/choice.php
 
       - name: Configure SSH
         if: failure()

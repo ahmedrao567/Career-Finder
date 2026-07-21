@@ -74,48 +74,39 @@ jobs:
       - name: Health Check
         run: |
           sleep 20
-          curl --fail http://${{ secrets.EC2_HOST }}/choice.php
+          curl --fail http://${{ secrets.EC2_HOST }}/wrong.php
 
-      - name: Configure SSH
+      - name: AI Deployment Failure Analysis
         if: failure()
-        run: |
-          mkdir -p ~/.ssh
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
 
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+            cd /home/ubuntu
 
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+            echo "Collecting deployment logs..."
 
-      - name: Collect Deployment Logs
-        if: failure()
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-          ubuntu@${{ secrets.EC2_HOST }} "
-          cd /home/ubuntu
+            docker ps -a > logs.txt
+            docker images >> logs.txt
+            docker compose ps >> logs.txt
+            docker compose logs >> logs.txt
 
-          echo '===== DOCKER PS ====='
-          docker ps -a
+            echo ""
+            echo "======================================="
+            echo "DEPLOYMENT LOGS"
+            echo "======================================="
+            cat logs.txt
 
-          echo ''
-          echo '===== DOCKER IMAGES ====='
-          docker images
+            echo ""
+            echo "======================================="
+            echo "RUNNING AI FAILURE ANALYSIS"
+            echo "======================================="
 
-          echo ''
-          echo '===== DOCKER COMPOSE PS ====='
-          docker compose ps
+            cd /home/ubuntu/ai-agent-cicd
 
-          echo ''
-          echo '===== DOCKER COMPOSE LOGS ====='
-          docker compose logs
+            source venv/bin/activate
 
-          " > logs.txt
-
-      - name: Display Collected Logs
-        if: failure()
-        run: |
-          cat logs.txt
-
-      - name: Run AI Agent
-        if: failure()
-        run: |
-          python ai-agent-cicd/ai-agent.py logs.txt
+            python ai-agent.py /home/ubuntu/logs.txt

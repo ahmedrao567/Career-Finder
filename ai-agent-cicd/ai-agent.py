@@ -1,54 +1,79 @@
-# ai_agent.py
+# ai-agent.py
 
 import sys
-
+import ollama
 from filter_logs import filter_logs
-from knowledge_base import SOLUTIONS
 
 
-def generate_report(filtered_logs):
+def analyze_logs(logs):
 
-    print("\n==============================")
-    print("AI FAILURE ANALYSIS REPORT")
-    print("==============================\n")
+    prompt = f"""
+You are a DevOps CI/CD failure analysis assistant.
 
-    if not filtered_logs:
-        print("No errors detected.")
-        return
+The text below contains deployment failure logs from a CI/CD pipeline.
 
-    print("Detected Issues:\n")
+Your job is to:
 
-    for line in filtered_logs:
-        print(line)
+1. Identify the actual error(s).
+2. Ignore unnecessary warnings unless they caused the failure.
+3. Explain the root cause of the failure.
+4. Suggest possible fixes.
 
-    print("\n------------------------------")
-    print("Suggested Fixes")
-    print("------------------------------\n")
+IMPORTANT:
+- Do NOT ask the user to provide more logs.
+- Do NOT ask any questions.
+- Analyze ONLY the logs provided below.
 
-    for line in filtered_logs:
+Deployment Logs:
 
-        lower_line = line.lower()
+{logs}
+"""
 
-        for key in SOLUTIONS:
+    response = ollama.chat(
+        model="llama3",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
 
-            if key in lower_line:
-                print(SOLUTIONS[key])
+    return response["message"]["content"]
 
 
 def main():
 
     if len(sys.argv) != 2:
-        print("Usage: python ai_agent.py <logs_file>")
+        print("Usage:")
+        print("python ai-agent.py logs.txt")
         return
 
     file_name = sys.argv[1]
 
-    with open(file_name, "r") as f:
-        logs = f.read()
+    # Read complete logs
+    with open(file_name, "r") as file:
+        logs = file.read()
 
+    # Filter only relevant log lines
     filtered_logs = filter_logs(logs)
 
-    generate_report(filtered_logs)
+    # Convert list into a string
+    filtered_logs = "\n".join(filtered_logs)
+
+    # If nothing was detected
+    if not filtered_logs:
+        print("\nNo deployment errors were detected in the logs.")
+        return
+
+    # Send filtered logs to Llama3
+    result = analyze_logs(filtered_logs)
+
+    print("\n==============================")
+    print("AI FAILURE ANALYSIS REPORT")
+    print("==============================\n")
+
+    print(result)
 
 
 if __name__ == "__main__":
